@@ -1,0 +1,55 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="shared-styles.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+
+
+<dom-module id="my-main">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+
+        padding: 10px;
+      }
+        
+        .mainBtn{ 
+            width: 100px; 
+            margin-left: 20px;
+            color: black;
+            font-weight: 600;
+        }
+    
+    </style>
+
+    <div style="text-align: center">
+      <h1>Welcome</h1>
+        <br><br>
+        <img src="../images/pallete.png" style="width 200px; height: 200px;">
+        <br><br><br>
+        <paper-button class="mainBtn" style="background-color: #47A" on-click="logIn">Log in</paper-button>
+        <paper-button class="mainBtn" style="background-color: #E35" on-click="register">Register</paper-button>
+    </div>
+  </template>
+
+  <script>
+    class MyMain extends Polymer.Element {
+      static get is() { return 'my-main'; }
+        ready(){
+            super.ready();
+        }
+        
+        logIn () {
+            window.history.pushState({}, null, '/login');
+            window.dispatchEvent(new CustomEvent("location-changed"));
+        }
+        
+        register() {
+            window.history.pushState({}, null, '/register');
+            window.dispatchEvent(new CustomEvent("location-changed"));
+        }
+    }
+
+    window.customElements.define(MyMain.is, MyMain);
+  </script>
+</dom-module>

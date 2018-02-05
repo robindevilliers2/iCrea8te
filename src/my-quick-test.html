@@ -1,0 +1,147 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="shared-styles.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-divider/paper-divider.html">
+<link rel="import" href="../bower_components/paper-card/paper-card.html">
+
+
+
+<dom-module id="my-quick-test">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+
+        padding: 10px;
+      }
+        
+        .mainBtn{ 
+            width: 100px; 
+            color: black;
+            font-weight: 600;
+        }
+        
+        .testFrame{
+            width:70vw;
+            padding-top: 15%;
+            padding-bottom: 15%;
+        }
+        
+        .testIcon{
+            width: 40px;
+            height: 40px;
+            color: white;
+            border-radius: 100px;
+            padding: 5px;
+        }
+    </style>
+    <app-localstorage-document id="projectId" key="projectId" data="{{projectId}}"></app-localstorage-document>
+
+      <div style="text-align: center">
+          <h1>Take our quick test</h1>
+          <h4>This will help us determine what you like!</h4>
+          <paper-card class = "testFrame">
+              
+              <div id = "imageHolder"><img id = "displayImg" style="width:100%;" > </div>
+              <div id="dislikeBtn" style="float:left; padding-left: 25%;">
+                <iron-icon class = "testIcon" icon="icons:clear" style="; background-color: red" on-click="dislikedImage"></iron-icon>
+              </div>
+              <div id="likeBtn" style="float:right; padding-right: 25%">
+                <iron-icon class = "testIcon" icon="icons:check" style="background-color: green" on-click="likedImage"></iron-icon>
+              </div>
+          </paper-card>
+      </div>
+  </template>
+
+  <script>
+      var currImg = 0;
+      var imgArray = null;
+      function snapshotToArray(snapshot) {
+            var returnArr = [];
+
+            snapshot.forEach(function(childSnapshot) {
+                var item = childSnapshot.data();
+                item.key = childSnapshot.id;
+
+                returnArr.push(item);
+            });
+
+            return returnArr;
+        };
+      
+      function getNextImage(element, project){
+            currImg++;
+           if(currImg == imgArray.length){
+                alert("you have completed the test!");
+               db.collection('users').doc(firebase.auth().currentUser.uid).collection('projects').doc(project).update({
+                   testTaken: true
+               });
+                window.history.pushState({}, null, '/project-dashboard');
+                window.dispatchEvent(new CustomEvent("location-changed"));
+            }else{
+                element.src = "../images/quickTest/" + imgArray[currImg % imgArray.length].path;
+            }
+        }
+      
+    class MyQuickTest extends Polymer.Element {
+      static get is() { return 'my-quick-test'; }
+        
+        
+        static get properties() {
+        return {
+            currUser:String,
+            projectId: {
+              type: String,
+              notify: true,
+              observer: '_newProject'
+          },
+            projectCategory: {
+              type: String,
+              notify: true
+          }            
+        };
+      }
+        
+        ready(){
+            super.ready();
+        }
+        
+        
+        likedImage(){
+            db.collection('users').doc(firebase.auth().currentUser.uid).collection('projects').doc(this.projectId).collection('likes').add({
+                path: imgArray[currImg % imgArray.length].path
+            });
+            getNextImage(this.$.displayImg, this.projectId);
+        }
+        
+        dislikedImage(){
+        db.collection('users').doc(firebase.auth().currentUser.uid).collection('projects').doc(this.projectId).collection('dislikes').add({
+                path: imgArray[currImg % imgArray.length].path
+            });
+            getNextImage(this.$.displayImg, this.projectId);
+        }
+        
+       
+        
+        _newProject(){
+            var dispImg = this.$.displayImg
+            var imgHold = this.$.imageHolder;
+            console.log(this.projectId + " " + this.projectCategory);
+            db.collection('testImages').where("imageCategory","==",this.projectCategory).get().then(function (querySnap) {
+                if(querySnap.empty){
+                    imgHold.innerHTML="You currently don't have any test images...";
+                }else{                
+                    imgArray = snapshotToArray(querySnap);
+                    dispImg.src = "../images/quickTest/" + imgArray[currImg % imgArray.length].path;
+                }            
+            }).catch(e => {console.log(e.message)});
+            console.log("here");
+        }
+        
+    }
+
+    window.customElements.define(MyQuickTest.is, MyQuickTest);
+  </script>
+</dom-module>

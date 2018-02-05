@@ -1,0 +1,108 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="shared-styles.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-divider/paper-divider.html">
+<link rel="import" href="../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
+
+
+
+<dom-module id="my-project-dashboard">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+
+        padding: 10px;
+      }
+        
+        .mainBtn{ 
+            width: 100px; 
+            color: black;
+            font-weight: 600;
+        }
+        
+        paper-spinner.multi {
+            width: 50px;
+            height: 50px;
+          --paper-spinner-layer-1-color: var(--paper-purple-500);
+          --paper-spinner-layer-2-color: var(--paper-cyan-500);
+          --paper-spinner-layer-3-color: var(--paper-blue-grey-500);
+          --paper-spinner-layer-4-color: var(--paper-amber-500);
+        }
+    </style>
+    <app-localstorage-document id="projectId" key="projectId" data="{{projectId}}"></app-localstorage-document>
+
+      <div style="text-align: center">
+        <div id="spinner1" style= "text-align: center;">
+            <paper-spinner class="multi"  style="margin-top: 5%;" active></paper-spinner>
+        </div>
+          <div id = "headerContent">
+            <h1 id = "projectName"></h1>
+            <iron-icon icon="icons:class" style="height: 100px; width: 100px; color: #337;"></iron-icon><br>
+            <h3 id = "projectCategory"></h3>
+          </div><br>
+          <div>
+            <h2 style="text-align: left;">Preferences</h2>          
+            <hr style = "border: 0; width: 90%; color: #99c; background-color: #99c; height: 1px;"> <br>
+            <paper-button class="mainBtn" style="background-color: #E35" on-click="dislikedClicked">Dislikes</paper-button>
+            <paper-button class="mainBtn" style="background-color: #7B7" on-click="likedClicked">liked</paper-button>
+          </div><br><br>
+      </div>
+  </template>
+
+  <script>
+      
+      
+    class MyProjectDashboard extends Polymer.Element {
+      static get is() { return 'my-project-dashboard'; }
+        
+        
+        static get properties() {
+        return {
+            currUser:String,
+            projectId: {
+              type: String,
+              notify: true,
+              observer: '_newProject'
+          }            
+        };
+      }
+        
+        ready(){
+            super.ready();
+        }
+        
+        _newProject(){
+            var pname = this.$.projectName;
+            var pcat = this.$.projectCategory;
+            var spinner1 = this.$.spinner1;
+            var head = this.$.headerContent;
+            spinner1.style.display = 'block';
+            head.style.display = 'none'; db.collection('users').doc(firebase.auth().currentUser.uid).collection('projects').doc(this.projectId).get().then(function(doc){
+                var project = doc.data();
+                pname.innerHTML = project.name;
+                pcat.innerHTML = project.category;
+            }).then(function(){
+                    spinner1.style.display = 'none';
+                    head.style.display = 'block';
+                }).catch(e => {console.log(e.message)});
+        }
+        
+        dislikedClicked(){
+           window.history.pushState({}, null, '/project-dislikes');
+            window.dispatchEvent(new CustomEvent("location-changed")); 
+        }
+        
+        likedClicked(){
+            window.history.pushState({}, null, '/project-likes');
+            window.dispatchEvent(new CustomEvent("location-changed"));
+        }
+        
+    }
+
+    window.customElements.define(MyProjectDashboard.is, MyProjectDashboard);
+  </script>
+</dom-module>
